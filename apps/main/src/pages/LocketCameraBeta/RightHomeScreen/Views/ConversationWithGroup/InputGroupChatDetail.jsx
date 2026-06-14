@@ -2,7 +2,8 @@ import React, { useState, useRef } from "react";
 import { ArrowUp } from "lucide-react";
 import { sendGroupMessage } from "@/services";
 import { useAuthStore, useGroupChatStore } from "@/stores";
-import GroupCameraDrawer from "./GroupCameraDrawer";
+import { SonnerInfo } from "@/components/ui/SonnerToast";
+// import GroupCameraDrawer from "./GroupCameraDrawer";
 
 const InputGroupChatDetail = ({ selectedChat, chat_disabled = false }) => {
   const [message, setMessage] = useState("");
@@ -82,7 +83,8 @@ const InputGroupChatDetail = ({ selectedChat, chat_disabled = false }) => {
     <div className="flex flex-row items-center gap-3">
       {/* CAMERA BUTTON */}
       <button
-        onClick={() => !chat_disabled && setCamOpen(true)}
+        // onClick={() => !chat_disabled && setCamOpen(true)}
+        onClick={() => !chat_disabled && SonnerInfo("Đang thi công...")}
         disabled={chat_disabled}
         className="relative flex items-center justify-center w-10 h-10 shrink-0 disabled:opacity-40"
       >
@@ -120,11 +122,11 @@ const InputGroupChatDetail = ({ selectedChat, chat_disabled = false }) => {
       </div>
 
       {/* CAMERA DRAWER — chụp & gửi vào nhóm */}
-      <GroupCameraDrawer
+      {/* <GroupCameraDrawer
         open={camOpen}
         onClose={() => setCamOpen(false)}
         group={selectedChat?.group || { id: selectedChat?.uid }}
-      />
+      /> */}
     </div>
   );
 };
