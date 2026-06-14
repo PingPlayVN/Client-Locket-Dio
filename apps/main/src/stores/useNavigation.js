@@ -11,6 +11,7 @@ export const useNavigation = () => {
   const [isSettingTabOpen, setSettingTabOpen] = useState(false);
   const [isOptionModalOpen, setOptionModalOpen] = useState(false);
   const [isFriendHistoryOpen, setFriendHistoryOpen] = useState(false);
+  const [isGroupCamOpen, setGroupCamOpen] = useState(false);
   const [isFullview, setIsFullview] = useState(() => {
     const saved = localStorage.getItem("isFullview");
     return saved === "true";
@@ -54,6 +55,7 @@ export const useNavigation = () => {
     isSettingTabOpen,
     setSettingTabOpen,
     isPWA, setIsPWA,
-    isFriendHistoryOpen, setFriendHistoryOpen
+    isFriendHistoryOpen, setFriendHistoryOpen,
+    isGroupCamOpen, setGroupCamOpen,
   };
 };

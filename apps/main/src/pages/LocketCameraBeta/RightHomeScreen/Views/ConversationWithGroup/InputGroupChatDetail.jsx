@@ -1,12 +1,13 @@
 import React, { useState, useRef } from "react";
 import { ArrowUp } from "lucide-react";
 import { sendGroupMessage } from "@/services";
-import { SonnerInfo } from "@/components/ui/SonnerToast";
 import { useAuthStore, useGroupChatStore } from "@/stores";
+import GroupCameraDrawer from "./GroupCameraDrawer";
 
 const InputGroupChatDetail = ({ selectedChat, chat_disabled = false }) => {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [camOpen, setCamOpen] = useState(false);
   const textareaRef = useRef(null);
 
   const myUid = useAuthStore((s) => s.user?.uid);
@@ -81,8 +82,9 @@ const InputGroupChatDetail = ({ selectedChat, chat_disabled = false }) => {
     <div className="flex flex-row items-center gap-3">
       {/* CAMERA BUTTON */}
       <button
-        onClick={() => SonnerInfo("Đang được thi công!")}
-        className="relative flex items-center justify-center w-10 h-10 shrink-0"
+        onClick={() => !chat_disabled && setCamOpen(true)}
+        disabled={chat_disabled}
+        className="relative flex items-center justify-center w-10 h-10 shrink-0 disabled:opacity-40"
       >
         <div className="absolute w-8 h-8 ring-4 text-primary rounded-full z-10" />
         <div className="absolute w-7 h-7 rounded-full bg-base-100 shadow-sm" />
@@ -116,6 +118,13 @@ const InputGroupChatDetail = ({ selectedChat, chat_disabled = false }) => {
           )}
         </button>
       </div>
+
+      {/* CAMERA DRAWER — chụp & gửi vào nhóm */}
+      <GroupCameraDrawer
+        open={camOpen}
+        onClose={() => setCamOpen(false)}
+        group={selectedChat?.group || { id: selectedChat?.uid }}
+      />
     </div>
   );
 };

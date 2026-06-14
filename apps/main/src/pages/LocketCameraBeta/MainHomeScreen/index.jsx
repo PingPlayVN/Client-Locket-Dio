@@ -26,6 +26,7 @@ export default function MainHomeScreen() {
     setOptionModalOpen,
     isFriendHistoryOpen,
     setFriendHistoryOpen,
+    isGroupCamOpen,
   } = navigation;
   const { selectedFile } = post;
 
@@ -73,8 +74,10 @@ export default function MainHomeScreen() {
           }`}
         >
           <div className="h-10" />
-          <MediaPreview />
-          <ActionControls />
+          {/* Ẩn preview + controls khi drawer camera nhóm đang mở: tránh 2 thẻ <video>
+              tranh cùng videoRef và 2 input #file-upload / CameraButton trùng nhau. */}
+          {!isGroupCamOpen && <MediaPreview />}
+          {!isGroupCamOpen && <ActionControls />}
           {/* Click để mở lịch sử */}
           <div className="relative w-full">
             {/* SelectFriendsList */}

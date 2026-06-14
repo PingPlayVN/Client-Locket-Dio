@@ -89,7 +89,7 @@ const CropImageStudio = () => {
     <>
       {showCropper && (
         <div
-          className={`fixed inset-0 z-50 bg-base-100/30 backdrop-blur-xl
+          className={`fixed inset-0 z-[80] bg-base-100/30 backdrop-blur-xl
             transition-all duration-500 ease-in-out overflow-hidden
             ${imageToCrop ? "opacity-100" : "opacity-0 pointer-events-none"}
             flex flex-col`}

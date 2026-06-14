@@ -26,6 +26,8 @@ const UploadFile = () => {
     setImageToCrop(null);
     setVideoCrop(null);
     const rawFile = event.target.files[0];
+    // Reset value để lần sau chọn lại cùng một file vẫn kích hoạt onChange.
+    event.target.value = "";
     if (!rawFile) return;
     const localPreviewUrl = URL.createObjectURL(rawFile);
     const fileType = rawFile.type.startsWith("image/")
