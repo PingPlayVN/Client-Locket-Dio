@@ -1,6 +1,8 @@
 import clsx from "clsx";
-import { Laugh, Undo2 } from "lucide-react";
+import { Clipboard, Flag, Laugh, Undo2 } from "lucide-react";
 import { QUICK_EMOJIS } from "./constants";
+import MessageReactionModal from "./MessageReactionModal";
+import { useState } from "react";
 
 export function MessageContextMenu({
   show,
@@ -13,6 +15,8 @@ export function MessageContextMenu({
   onReport,
 }) {
   if (!show) return null;
+
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   return (
     <>
@@ -41,7 +45,10 @@ export function MessageContextMenu({
             </button>
           ))}
 
-          <button className="w-9 h-9 flex items-center justify-center rounded-full">
+          <button
+            onClick={() => setShowEmojiPicker(true)}
+            className="w-9 h-9 flex items-center justify-center rounded-full"
+          >
             <Laugh size={23} />
           </button>
         </div>
@@ -57,13 +64,16 @@ export function MessageContextMenu({
         )}
       >
         {content.type !== "moment" && (
-          <button
-            onClick={onCopy}
-            className="flex items-center gap-3 px-4 py-3 hover:bg-base-200 w-full text-left text-sm font-medium"
-          >
-            <span className="text-lg">📋</span>
-            <span>Sao chép</span>
-          </button>
+          <>
+            <button
+              onClick={onCopy}
+              className="flex items-center gap-3 px-4 py-3 hover:bg-base-200 w-full text-left text-sm font-medium"
+            >
+              <Clipboard size={20} />
+              <span>Sao chép</span>
+            </button>
+            <div className="h-px bg-base-300 mx-2" />
+          </>
         )}
 
         {isMe ? (
@@ -79,11 +89,18 @@ export function MessageContextMenu({
             onClick={onReport}
             className="flex items-center gap-3 px-4 py-3 hover:bg-base-200 w-full text-left text-sm font-medium"
           >
-            <span className="text-lg">🚩</span>
+            <Flag size={20} className="text-error" />
             <span>Báo cáo</span>
           </button>
         )}
       </div>
+
+      <MessageReactionModal
+        open={showEmojiPicker}
+        onClose={() => setShowEmojiPicker(false)}
+        myReaction={myReaction}
+        onReaction={onReaction}
+      />
     </>
   );
 }
