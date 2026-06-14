@@ -1,6 +1,6 @@
 import { formatTimeAgoV2 } from "@/utils";
 import { ChevronRight, Users } from "lucide-react";
-import { useFriendStoreV3 } from "@/stores";
+import { useAuthStore, useFriendStoreV3 } from "@/stores";
 import clsx from "clsx";
 
 function getGroupDisplayName(group, memberDetails) {
@@ -19,13 +19,25 @@ function getGroupDisplayName(group, memberDetails) {
 // ================= Component: ConversationItem =================
 export const ConversationItem = ({ msg, onSelect }) => {
   const friendMap = useFriendStoreV3((s) => s.friendDetailsMap);
+  const user = useAuthStore((s) => s.user);
   const isGroup = msg.type === "group";
 
   const friendDetail = !isGroup ? (friendMap?.[msg.with_user] ?? null) : null;
   const groupMembers = isGroup
-    ? (msg.group?.users || [])
-        .map((u) => friendMap?.[u.user_id])
-        .filter(Boolean)
+    ? (msg.group?.users || []).map((u) => {
+        const isCurrentUser = u.user_id === user?.localId;
+
+        return {
+          userId: u.user_id,
+          profilePic: isCurrentUser
+            ? user?.profilePicture || "/images/default_profile.png"
+            : friendMap?.[u.user_id]?.profilePic ||
+              "/images/default_profile.png",
+          firstName: isCurrentUser
+            ? user?.firstName || "Bạn"
+            : friendMap?.[u.user_id]?.firstName || "",
+        };
+      })
     : [];
 
   const displayName = isGroup
@@ -42,6 +54,8 @@ export const ConversationItem = ({ msg, onSelect }) => {
 
   const isUnread = msg.isRead === false;
   const sortTime = Number(msg.latestMessage?.createdAt || msg.update_time || 0);
+
+  const visibleMembers = groupMembers.slice(0, 5);
 
   return (
     <div
@@ -89,14 +103,22 @@ export const ConversationItem = ({ msg, onSelect }) => {
           >
             {msg.group?.emoji ? (
               <span className="text-2xl">{msg.group.emoji}</span>
-            ) : groupMembers[0]?.profilePic ? (
-              <img
-                src={groupMembers[0].profilePic}
-                alt={displayName}
-                className="w-full h-full rounded-full object-cover"
-              />
             ) : (
-              <Users className="w-6 h-6 text-primary" />
+              <div className="relative w-full h-full rounded-full overflow-hidden">
+                <div className="relative w-full h-full rounded-full overflow-hidden">
+                  {visibleMembers.map((member, index) => (
+                    <img
+                      key={member.userId}
+                      src={member.profilePic}
+                      alt=""
+                      className={clsx(
+                        "absolute w-6 h-6 rounded-full object-cover border-2 border-base-100",
+                        getPosition(visibleMembers.length, index),
+                      )}
+                    />
+                  ))}
+                </div>
+              </div>
             )}
           </div>
         )
@@ -142,4 +164,43 @@ export const ConversationItem = ({ msg, onSelect }) => {
       </div>
     </div>
   );
+};
+
+const getPosition = (count, index) => {
+  if (count === 1) {
+    return "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2";
+  }
+
+  if (count === 2) {
+    return [
+      "top-1/2 left-1 -translate-y-1/2",
+      "top-1/2 right-1 -translate-y-1/2",
+    ][index];
+  }
+
+  if (count === 3) {
+    return [
+      "top-1 left-1/2 -translate-x-1/2",
+      "bottom-1 left-1",
+      "bottom-1 right-1",
+    ][index];
+  }
+
+  if (count === 4) {
+    return [
+      "top-1 left-1",
+      "top-1 right-1",
+      "bottom-1 left-1",
+      "bottom-1 right-1",
+    ][index];
+  }
+
+  // 5 avatars
+  return [
+    "top-0 left-1/2 -translate-x-1/2",
+    "top-3 left-0",
+    "top-3 right-0",
+    "bottom-0 left-1",
+    "bottom-0 right-1",
+  ][index];
 };
