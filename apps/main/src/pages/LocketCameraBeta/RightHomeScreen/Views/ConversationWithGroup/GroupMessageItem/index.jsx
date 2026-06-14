@@ -263,8 +263,8 @@ const GroupMessageItem = ({ msg }) => {
             "relative z-[50] scale-110": showMenu,
             "translate-x-3": showMenu && !isMe,
             "-translate-x-3": showMenu && isMe,
-            "-translate-y-10": showMenu && menuDirection === "top",
-            "translate-y-10": showMenu && menuDirection === "bottom",
+            "-translate-y-14": showMenu && menuDirection === "top",
+            "translate-y-14": showMenu && menuDirection === "bottom",
           },
         )}
         onTouchStart={handleTouchStart}
