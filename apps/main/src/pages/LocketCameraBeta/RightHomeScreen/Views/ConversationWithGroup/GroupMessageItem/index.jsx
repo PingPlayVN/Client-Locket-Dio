@@ -21,8 +21,7 @@ const GroupMessageItem = ({ msg }) => {
 
   const [showReactions, setShowReactions] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
+
   const bubbleRef = useRef(null);
   const holdTimerRef = useRef(null);
   const isLongPress = useRef(false);
@@ -33,6 +32,7 @@ const GroupMessageItem = ({ msg }) => {
   const updateGroupMessageReaction = useMessagesStore(
     (s) => s.updateGroupMessageReaction,
   );
+  const [menuDirection, setMenuDirection] = useState("center");
 
   const senderDetail =
     friendMap?.[msg.user_id] ?? userInfoMap?.[msg.user_id] ?? null;
@@ -120,14 +120,28 @@ const GroupMessageItem = ({ msg }) => {
       }
 
       setShowMenu(false);
-      setShowEmojiPicker(false);
     },
     [msg, me, updateGroupMessageReaction],
   );
 
-  const showContextMenu = useCallback((x, y) => {
-    setMenuPos({ x, y });
-    setShowEmojiPicker(false);
+  const showContextMenu = useCallback(() => {
+    if (bubbleRef.current) {
+      const rect = bubbleRef.current.getBoundingClientRect();
+
+      const viewportHeight = window.innerHeight;
+
+      const topZone = viewportHeight * 0.3;
+      const bottomZone = viewportHeight * 0.7;
+
+      if (rect.top < topZone) {
+        setMenuDirection("bottom");
+      } else if (rect.bottom > bottomZone) {
+        setMenuDirection("top");
+      } else {
+        setMenuDirection("center");
+      }
+    }
+
     setShowMenu(true);
   }, []);
 
@@ -247,8 +261,10 @@ const GroupMessageItem = ({ msg }) => {
             "rounded-bl-2xl": isMe,
             "rounded-br-2xl": !isMe,
             "relative z-[50] scale-110": showMenu,
-            "left-3": showMenu && !isMe,
-            "right-3": showMenu && isMe,
+            "translate-x-3": showMenu && !isMe,
+            "-translate-x-3": showMenu && isMe,
+            "-translate-y-10": showMenu && menuDirection === "top",
+            "translate-y-10": showMenu && menuDirection === "bottom",
           },
         )}
         onTouchStart={handleTouchStart}
