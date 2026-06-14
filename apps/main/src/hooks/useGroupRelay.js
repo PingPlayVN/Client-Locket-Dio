@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from "react";
-import { useMessagesStore } from "@/stores";
+import { useMessagesStore, useGroupChatStore } from "@/stores";
 
 const RELAY_URL = import.meta.env.VITE_RELAY_GROUP_URL;
 const PING_INTERVAL = 15000;
@@ -15,7 +15,8 @@ export const useGroupRelay = (idToken, myUid, isActive) => {
 
   const addMessageWithUserV2 = useMessagesStore((s) => s.addMessageWithUserV2);
   const updateGroupMessageReaction = useMessagesStore((s) => s.updateGroupMessageReaction);
-  const fetchConversations = useMessagesStore((s) => s.fetchConversations);
+  const syncGroupById = useGroupChatStore((s) => s.syncGroupById);
+  const fetchAndSyncGroups = useGroupChatStore((s) => s.fetchAndSyncGroups);
 
   const disconnect = useCallback(() => {
     closingRef.current = true;
@@ -37,7 +38,14 @@ export const useGroupRelay = (idToken, myUid, isActive) => {
   const handleMessage = useCallback(
     (data) => {
       if (data.type === "groupUpdates") {
-        fetchConversations();
+        // Chỉ đồng bộ đúng group bị thay đổi (payload kèm group_id),
+        // tránh full-refresh toàn bộ danh sách group.
+        if (data.group_id) {
+          syncGroupById(data.group_id);
+        } else {
+          // Fallback hiếm gặp khi không có group_id: delta-sync, không full fetch lại direct.
+          fetchAndSyncGroups();
+        }
       } else if (data.type === "groupChatUpdate") {
         const u = data.update;
         if (!u) return;
@@ -74,7 +82,7 @@ export const useGroupRelay = (idToken, myUid, isActive) => {
         }
       }
     },
-    [addMessageWithUserV2, updateGroupMessageReaction, fetchConversations],
+    [addMessageWithUserV2, updateGroupMessageReaction, syncGroupById, fetchAndSyncGroups],
   );
 
   const startPing = useCallback(() => {

@@ -196,6 +196,49 @@ export const useGroupChatStore = create((set, get) => ({
     await deleteGroupsByIds(groupIds);
   },
 
+  // Đồng bộ MỘT group theo id (dùng cho realtime groupUpdates).
+  // Chỉ fetch đúng group bị thay đổi thay vì refresh toàn bộ danh sách.
+  syncGroupById: async (groupId) => {
+    if (!groupId) return;
+
+    try {
+      const data = await getGroupsState({ groupIds: [groupId] });
+      if (!data) return;
+
+      const { groups: incoming = [], removed_group_ids = [] } = data;
+
+      if (removed_group_ids.length) {
+        await get().removeGroups(removed_group_ids);
+      }
+
+      if (incoming.length) {
+        const { groups } = get();
+        const map = new Map(groups.map((g) => [g.id, g]));
+
+        incoming.forEach((group) => {
+          map.set(group.id, { ...map.get(group.id), ...group });
+        });
+
+        set({ groups: sortGroups([...map.values()]) });
+        await upsertGroups(incoming);
+
+        const latestUpdatedAt = Math.max(
+          ...incoming.map((g) => g.last_updated_at || 0),
+          0,
+        );
+
+        if (latestUpdatedAt > 0) {
+          const prev = await getGroupsLastFetchedAt();
+          if (latestUpdatedAt > (prev || 0)) {
+            await setGroupsLastFetchedAt(latestUpdatedAt);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("syncGroupById error:", err);
+    }
+  },
+
   resetGroups: () => set({ groups: [] }),
 }));
 
