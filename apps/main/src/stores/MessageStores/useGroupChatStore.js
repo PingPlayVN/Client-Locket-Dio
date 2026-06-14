@@ -239,6 +239,47 @@ export const useGroupChatStore = create((set, get) => ({
     }
   },
 
+  // Delta-sync toàn bộ group đang có dựa trên lastFetchedAt.
+  // Dùng khi quay lại tab/app sau khi bị ẩn để bắt kịp các update bị miss từ relay.
+  syncGroupsDelta: async () => {
+    try {
+      const { groups } = get();
+
+      // Chưa có group local → fallback full + delta sync.
+      if (!groups.length) {
+        return get().fetchAndSyncGroups();
+      }
+
+      const lastFetchedAt = await getGroupsLastFetchedAt();
+
+      const syncData = await getGroupsState({
+        groupIds: groups.map((g) => g.id),
+        lastFetchedAt: lastFetchedAt || 0,
+      });
+
+      if (!syncData) return;
+
+      const synced = await mergeGroups({
+        incomingGroups: syncData.groups || [],
+        removedGroupIds: syncData.removed_group_ids || [],
+        currentGroups: groups,
+      });
+
+      set({ groups: synced });
+
+      const latestUpdatedAt = Math.max(
+        ...synced.map((g) => g.last_updated_at || 0),
+        lastFetchedAt || 0,
+      );
+
+      if (latestUpdatedAt > 0) {
+        await setGroupsLastFetchedAt(latestUpdatedAt);
+      }
+    } catch (err) {
+      console.error("syncGroupsDelta error:", err);
+    }
+  },
+
   resetGroups: () => set({ groups: [] }),
 }));
 

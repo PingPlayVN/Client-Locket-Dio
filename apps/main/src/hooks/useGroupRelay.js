@@ -17,6 +17,7 @@ export const useGroupRelay = (idToken, myUid, isActive) => {
   const updateGroupMessageReaction = useMessagesStore((s) => s.updateGroupMessageReaction);
   const syncGroupById = useGroupChatStore((s) => s.syncGroupById);
   const fetchAndSyncGroups = useGroupChatStore((s) => s.fetchAndSyncGroups);
+  const syncGroupsDelta = useGroupChatStore((s) => s.syncGroupsDelta);
 
   const disconnect = useCallback(() => {
     closingRef.current = true;
@@ -181,6 +182,36 @@ export const useGroupRelay = (idToken, myUid, isActive) => {
       disconnect();
     };
   }, [isActive, idToken, myUid, connect, disconnect]);
+
+  // ================= Catch-up khi quay lại tab/app =================
+  // Khi bị ẩn (minimize / chuyển tab / khoá máy), relay có thể bị treo và
+  // các broadcast bị miss. Lúc quay lại: delta-sync group state + reconnect relay.
+  const wasHiddenRef = useRef(false);
+  useEffect(() => {
+    if (!isActive) return;
+
+    const handleVisibility = () => {
+      if (document.hidden) {
+        wasHiddenRef.current = true;
+        return;
+      }
+      if (!wasHiddenRef.current) return;
+      wasHiddenRef.current = false;
+
+      // Bắt kịp state đã đổi trong lúc ẩn (unread, latest_message, ...).
+      syncGroupsDelta();
+
+      // Đảm bảo relay sống lại nếu kết nối đã chết khi ở background.
+      if (wsRef.current?.readyState !== WebSocket.OPEN) {
+        connectRef.current?.();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [isActive, syncGroupsDelta]);
 
   const sendReconnect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {

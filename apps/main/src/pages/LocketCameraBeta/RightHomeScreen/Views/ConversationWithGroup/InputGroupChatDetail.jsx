@@ -2,11 +2,15 @@ import React, { useState, useRef } from "react";
 import { ArrowUp } from "lucide-react";
 import { sendGroupMessage } from "@/services";
 import { SonnerInfo } from "@/components/ui/SonnerToast";
+import { useAuthStore, useGroupChatStore } from "@/stores";
 
 const InputGroupChatDetail = ({ selectedChat, chat_disabled = false }) => {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const textareaRef = useRef(null);
+
+  const myUid = useAuthStore((s) => s.user?.uid);
+  const updateGroupState = useGroupChatStore((s) => s.updateGroupState);
 
   const MAX_ROWS = 6;
 
@@ -22,9 +26,25 @@ const InputGroupChatDetail = ({ selectedChat, chat_disabled = false }) => {
     }
 
     try {
-      await sendGroupMessage({
+      const res = await sendGroupMessage({
         groupId: selectedChat.uid,
         message: sentText,
+      });
+
+      // Optimistic: cập nhật preview ngoài list group ngay (latest_message + đẩy lên đầu).
+      const now = Date.now();
+      updateGroupState(selectedChat.uid, {
+        latest_message: {
+          id: res?.id || `${myUid}-local-${now}`,
+          created_at: now,
+          updated_at: null,
+          user_id: myUid,
+          content: { content: sentText, type: "text" },
+          reactions: [],
+        },
+        last_updated_at: now,
+        unread_count: 0,
+        last_read_at: now,
       });
     } catch (err) {
       console.error("sendGroupMessage error:", err);

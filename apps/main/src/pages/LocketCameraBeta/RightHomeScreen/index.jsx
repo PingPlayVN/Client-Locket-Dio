@@ -47,6 +47,7 @@ const RightHomeScreen = ({ setIsHomeOpen }) => {
     groups,
     fetchGroups,
     upsertGroup,
+    updateGroupState,
     loading: groupsLoading,
   } = useGroupChatStore();
 
@@ -149,7 +150,13 @@ const RightHomeScreen = ({ setIsHomeOpen }) => {
 
     if (chat.type === "group") {
       await getGroupMessagesAction(chat.uid);
-      await markGroupAsRead({ groupId: chat.uid });
+
+      if (chat.isRead === false) {
+        const ts = Number(chat.latestMessage?.createdAt) || Date.now();
+        // Optimistic: reset unread local ngay để list ngoài hiện đã đọc.
+        updateGroupState(chat.uid, { unread_count: 0, last_read_at: ts });
+        await markGroupAsRead({ groupId: chat.uid, timestamp: ts });
+      }
     } else {
       await getMessagesByUser(chat.uid);
 
