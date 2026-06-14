@@ -80,7 +80,7 @@ export const ConversationItem = ({ msg, onSelect }) => {
         ) : (
           <div
             className={clsx(
-              "w-15 h-15 rounded-full flex items-center justify-center bg-primary/10 transition-all duration-200 outline-3 p-0.5",
+              "w-15 h-15 rounded-full flex items-center justify-center transition-all duration-200 outline-3 p-0.5",
               {
                 "outline-amber-400": isUnread,
                 "outline-gray-300": !isUnread,
