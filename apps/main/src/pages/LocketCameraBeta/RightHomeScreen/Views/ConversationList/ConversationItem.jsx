@@ -58,8 +58,8 @@ export const ConversationItem = ({ msg, onSelect }) => {
       className={clsx(
         "relative w-full flex items-center gap-3 p-3 rounded-3xl shadow-sm cursor-pointer transition",
         {
-          "bg-base-200": isUnread,
-          "bg-base-300": !isUnread,
+          "bg-base-300": isUnread,
+          "bg-base-200": !isUnread,
         },
       )}
     >
