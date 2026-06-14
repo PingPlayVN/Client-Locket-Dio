@@ -7,6 +7,7 @@ import {
   saveConversations,
   saveMessages,
   upsertConversations,
+  deleteMessageById,
 } from "@/cache/chatsDB";
 import { MESSAGES_CONFIG } from "@/config";
 
@@ -319,6 +320,24 @@ export const useMessagesStore = create((set, get) => ({
 
     // 4️⃣ Lưu cache / DB
     await saveMessages(filtered);
+  },
+
+  // ==== Xoá 1 tin nhắn nhóm (thu hồi) ====
+  removeGroupMessage: (groupId, messageId) => {
+    if (!groupId || !messageId) return;
+
+    const { messages } = get();
+    const current = messages[groupId] || [];
+    const updated = current.filter((m) => m.id !== messageId);
+
+    set({
+      messages: {
+        ...messages,
+        [groupId]: updated,
+      },
+    });
+
+    deleteMessageById(messageId);
   },
 
   // ==== 5️⃣ Remove message ====

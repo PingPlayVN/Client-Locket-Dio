@@ -86,6 +86,24 @@ export const getGroupMessages = async ({ groupId, limit = 40, beforeTimestamp = 
   }
 };
 
+export const deleteGroupMessage = async ({ groupId, messageId } = {}) => {
+  try {
+    const body = {
+      data: {
+        type: "deleteMessage",
+        group_id: groupId,
+        message_id: messageId,
+      },
+    };
+
+    const res = await instanceLocketV2.post("groupChatOp", body);
+    return res.data?.result?.data ?? null;
+  } catch (error) {
+    console.error("Error deleting group message:", error);
+    throw error;
+  }
+};
+
 export const sendGroupMessage = async ({ groupId, message, client_token } = {}) => {
   try {
     const body = {

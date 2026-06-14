@@ -6,7 +6,11 @@ import React, {
   useMemo,
 } from "react";
 import { useFriendStoreV3, useUserInfoStore, useMessagesStore } from "@/stores";
-import { reactToGroupMessage, removeGroupMessageReaction } from "@/services";
+import {
+  reactToGroupMessage,
+  removeGroupMessageReaction,
+  deleteGroupMessage,
+} from "@/services";
 
 import { ReactionViewerDrawer } from "./ReactionViewerDrawer";
 import { MomentContent } from "./MomentContent";
@@ -32,6 +36,8 @@ const GroupMessageItem = ({ msg }) => {
   const updateGroupMessageReaction = useMessagesStore(
     (s) => s.updateGroupMessageReaction,
   );
+  const removeGroupMessage = useMessagesStore((s) => s.removeGroupMessage);
+  const addMessageWithUserV2 = useMessagesStore((s) => s.addMessageWithUserV2);
   const [menuDirection, setMenuDirection] = useState("center");
 
   const senderDetail =
@@ -297,8 +303,21 @@ const GroupMessageItem = ({ msg }) => {
             SonnerInfo("Đã sao chép");
             setShowMenu(false);
           }}
-          onRecall={() => {
-            SonnerInfo("Đang nghiên cứu...");
+          onRecall={async () => {
+            setShowMenu(false);
+            // Optimistic: gỡ tin khỏi UI ngay, revert nếu API lỗi.
+            removeGroupMessage(msg.uid, msg.id);
+            try {
+              await deleteGroupMessage({
+                groupId: msg.uid,
+                messageId: msg.id,
+              });
+              SonnerInfo("Đã thu hồi tin nhắn");
+            } catch (err) {
+              console.error("recall message error:", err);
+              addMessageWithUserV2(msg.uid, msg);
+              SonnerInfo("Thu hồi thất bại, vui lòng thử lại");
+            }
           }}
           onReport={() => {
             SonnerInfo("Chưa mở tính năng này...");

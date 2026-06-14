@@ -54,6 +54,15 @@ export async function addMessage(message) {
   await db.messages.put(message);
 }
 
+export async function deleteMessageById(id) {
+  if (!id) return;
+  try {
+    await db.messages.delete(id);
+  } catch (err) {
+    console.error("❌ Failed to delete message:", err);
+  }
+}
+
 export async function getMessagesByConversationId(
   conversationId,
   limit = 50

@@ -15,6 +15,7 @@ export const useGroupRelay = (idToken, myUid, isActive) => {
 
   const addMessageWithUserV2 = useMessagesStore((s) => s.addMessageWithUserV2);
   const updateGroupMessageReaction = useMessagesStore((s) => s.updateGroupMessageReaction);
+  const removeGroupMessage = useMessagesStore((s) => s.removeGroupMessage);
   const syncGroupById = useGroupChatStore((s) => s.syncGroupById);
   const fetchAndSyncGroups = useGroupChatStore((s) => s.fetchAndSyncGroups);
   const syncGroupsDelta = useGroupChatStore((s) => s.syncGroupsDelta);
@@ -80,10 +81,14 @@ export const useGroupRelay = (idToken, myUid, isActive) => {
             null,
             "reactionRemoved",
           );
+        } else if (u.type === "messageDeleted") {
+          if (u.message_id) {
+            removeGroupMessage(data.group_id, u.message_id);
+          }
         }
       }
     },
-    [addMessageWithUserV2, updateGroupMessageReaction, syncGroupById, fetchAndSyncGroups],
+    [addMessageWithUserV2, updateGroupMessageReaction, removeGroupMessage, syncGroupById, fetchAndSyncGroups],
   );
 
   const startPing = useCallback(() => {
